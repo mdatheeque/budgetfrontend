@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from "react";
+// import react
+import React, { useState, useEffect, useContext } from "react";
+
+//import CSS related to home - separate file kept for ease of use.
 import "./Home.css";
 
+//importing helper api functions which are neccessary for this component or page alone
 import { addABudget, getSumOfBudgetTypes } from "./helper/apicalls";
 
+
+//All the react icon imports
 import {
   FaAngleDoubleRight,
   FaChartBar,
@@ -11,24 +17,34 @@ import {
 } from "react-icons/fa";
 import { GiExpense, GiCash } from "react-icons/gi";
 import { RiBankFill } from "react-icons/ri";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
+//import toast to trigger
+import { toast } from "react-toastify";
+
+//context and action type imports
+import { BudgetContext } from "../Context/BudegetContext";
+import { ADD_SUM_BUDGET, IS_UPDATED } from "../Context/action.types";
+
+//This is the HOME page component
+//This contains : 
+//1. The overview of the app.
+//2. Input fields to add a budget transaction
+//3. An overall overview of all the types of budgets
 const Home = () => {
-  //All states
+
+  //destructuring central state and dispatch from the context
+  const { state, dispatch } = useContext(BudgetContext);
+
+  //destructuring the neccessary values from the state
+  const { sumOfBudgets, isUpdated } = state;
+
+  //All sub states or this component states
   const [subTransType, setSubTransType] = useState([
     "Fixed Expense",
     "Recurring Expense",
     "Non-Recurring Expense",
     "Whammy Expense",
   ]);
-
-  const [overViewValues, setOverViewValues] = useState({
-    expense: 0,
-    income: 0,
-    savings: 0,
-    cashInHand: 0,
-  });
 
   const [values, setValues] = useState({
     budgetType: "Expense",
@@ -40,18 +56,22 @@ const Home = () => {
     status: false,
   });
 
-  //Use Effect
+  //Use Effect to get the overview value from the DB and execute them again if a transaction is added
   useEffect(() => {
     setValues({ ...values, status: false });
     preload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.status]);
 
-  const { expense, income, savings, cashInHand } = overViewValues;
+  
 
   //preloads
   const preload = () => {
+
+    //helper function to get the overview values alone from the DB
     getSumOfBudgetTypes().then((data) => {
+
+      //Search function to identify the individual key from the array of objects 
       function search(nameKey, myArray) {
         for (var i = 0; i < myArray.length; i++) {
           if (myArray[i]._id === nameKey) {
@@ -60,28 +80,57 @@ const Home = () => {
         }
       }
 
+      //Execution of the search function with the respected key values
       let expenseDB = search("expense", data);
       let incomeDB = search("income", data);
       let savingsDB = search("savings", data);
 
-      setOverViewValues({
-        ...overViewValues,
+
+      //Setting up all the data into a temporary obj to dispatch into the central state
+      const sumOfBudgets = {
         expense: expenseDB.total,
         income: incomeDB.total,
         savings: savingsDB.total,
         cashInHand: incomeDB.total - expenseDB.total - savingsDB.total,
-      });
+      };
+
+
+      //dispatching the fetched overview value to the central state
+      dispatch({
+        type : ADD_SUM_BUDGET,
+        payload : sumOfBudgets
+      })
+
+      //This will flip the switch and this will make the useEffect from App.js to retrigger to fetch the new data
+      dispatch({
+        type: IS_UPDATED,
+        payload : !isUpdated
+      })
+
     });
   };
 
-  //toasts
+  //destructing deep down from the retreived state
+  const { expense, income, savings, cashInHand } = sumOfBudgets;
+
+  //toast functions
   const successToast = () => toast.success("Budget addedd successfully");
   const errorToast = (err) => toast.error(err);
 
   //On change and submits
 
   const onChangeType = () => {
+
+    //Three types of transaction can be done (expense, income, saving)
+    //and each of them have their own respective sub transaction types.
+    //As an initial step we are inserting the expense transaction and its sub transaction into the dropdown fields
+    //directly inside the HTML
+    //To change them this onChangeType function is used
+
+    //Getting transaction type from the ID
     const transType = document.getElementById("transType").value;
+
+    //Standard type and its sub types
     const transTypeData = [
       {
         type: "Expense",
@@ -102,13 +151,15 @@ const Home = () => {
       },
     ];
 
-    console.log(transTypeData);
-    console.log(transType);
+    //filtering out the other transactions 
     const selectedTransTypeData = transTypeData.filter(
       (TransTypeData) => TransTypeData.type === transType
     );
-    console.log(selectedTransTypeData);
+
+    //Setting the sub transaction back to this component state and further inserted into input field in HTML
     setSubTransType(selectedTransTypeData[0].data);
+
+    //Setting the intial value back to the HTML (A value will be provided, the dropdown will not be left empty)
     setValues({
       ...values,
       budgetType: selectedTransTypeData[0].type,
@@ -116,12 +167,17 @@ const Home = () => {
     });
   };
 
+  //Higher order function which sets the value state whenever the input fileds change.
+  //The advantage of higher order function is not to call all the state values one by one
   const handleChange = (name) => (event) => {
     event.preventDefault();
     setValues({ ...values, [name]: event.target.value });
   };
 
+  //End submit function which submits all the writte values into the DB
   const submitValues = async () => {
+
+    //addABudget is the helper function which talks with the DB and inserts the data
     addABudget(values)
       .then((data) => {
         console.log(data);
@@ -139,13 +195,16 @@ const Home = () => {
           amount: "",
           status: true,
         });
+
+        //Returing Success toast
         successToast();
       })
       .catch((err) => {
-        console.log(err);
+        //Returning Error toast
         errorToast(err);
       });
 
+    //Setting back values to normal once the data got updated successfully
     setValues({
       ...values,
       budgetType: "Expense",
@@ -156,12 +215,14 @@ const Home = () => {
       amount: "",
       status: false,
     });
-
-    console.log(values);
   };
 
   // Ui parts
+
+  //This is the about part of the home page
   const Aboutapp = () => (
+
+    //Grid display has been used here
     <div className="grid-item-1">
       <h1>Personal</h1>
       <h1 style={{ display: "block" }}>Budget App</h1>
@@ -190,6 +251,7 @@ const Home = () => {
     </div>
   );
 
+  //This contains all the input fields
   const AddATransaction = () => (
     <div className="grid-item-2">
       <h3>Add a Transaction</h3>
@@ -267,6 +329,7 @@ const Home = () => {
     </div>
   );
 
+  //This part contains the overview of all the budget
   const BudgetOverview = () => (
     <div className="grid-item-3">
       <h2>Total Budget Overview</h2>
@@ -277,7 +340,7 @@ const Home = () => {
           </div>
           <div className="overview-details">
             <div className="label-3">Total Income</div>
-            <h1>₹ {income.toLocaleString()}</h1>
+            <h1>₹ {income}</h1>
           </div>
         </div>
         <div className="overview-item">
@@ -286,7 +349,7 @@ const Home = () => {
           </div>
           <div className="overview-details">
             <div className="label-3">Total Expense</div>
-            <h1>₹ {expense.toLocaleString()}</h1>
+            <h1>₹ {expense}</h1>
           </div>
         </div>
         <div className="overview-item">
@@ -295,7 +358,7 @@ const Home = () => {
           </div>
           <div className="overview-details">
             <div className="label-3">Total Savings</div>
-            <h1>₹ {savings.toLocaleString()}</h1>
+            <h1>₹ {savings}</h1>
           </div>
         </div>
         <div className="overview-item">
@@ -304,13 +367,14 @@ const Home = () => {
           </div>
           <div className="overview-details">
             <div className="label-3">Total Cash in Hand</div>
-            <h1>₹ {cashInHand.toLocaleString()}</h1>
+            <h1>₹ {cashInHand}</h1>
           </div>
         </div>
       </div>
     </div>
   );
 
+  //Core return statemnet of this Home Component
   return (
     <div className="container">
       <div className="grid-container">

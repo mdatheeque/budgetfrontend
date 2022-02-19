@@ -1,7 +1,7 @@
 import { API } from "../../backend";
 
 export const getSumOfBudgetTypes = () => {
-  console.log(API);
+  console.log(API, 'Home APi');
   return fetch(`${API}getsumofbudgettype`, {
     method: "GET",
   })
