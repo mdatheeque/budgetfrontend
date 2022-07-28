@@ -7,7 +7,6 @@ import "./Home.css";
 //importing helper api functions which are neccessary for this component or page alone
 import { addABudget, getSumOfBudgetTypes } from "./helper/apicalls";
 
-
 //All the react icon imports
 import {
   FaAngleDoubleRight,
@@ -26,12 +25,11 @@ import { BudgetContext } from "../Context/BudegetContext";
 import { ADD_SUM_BUDGET, IS_UPDATED } from "../Context/action.types";
 
 //This is the HOME page component
-//This contains : 
+//This contains :
 //1. The overview of the app.
 //2. Input fields to add a budget transaction
 //3. An overall overview of all the types of budgets
 const Home = () => {
-
   //destructuring central state and dispatch from the context
   const { state, dispatch } = useContext(BudgetContext);
 
@@ -63,15 +61,11 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.status]);
 
-  
-
   //preloads
   const preload = () => {
-
     //helper function to get the overview values alone from the DB
     getSumOfBudgetTypes().then((data) => {
-
-      //Search function to identify the individual key from the array of objects 
+      //Search function to identify the individual key from the array of objects
       function search(nameKey, myArray) {
         for (var i = 0; i < myArray.length; i++) {
           if (myArray[i]._id === nameKey) {
@@ -85,7 +79,6 @@ const Home = () => {
       let incomeDB = search("income", data);
       let savingsDB = search("savings", data);
 
-
       //Setting up all the data into a temporary obj to dispatch into the central state
       const sumOfBudgets = {
         expense: expenseDB.total,
@@ -94,19 +87,17 @@ const Home = () => {
         cashInHand: incomeDB.total - expenseDB.total - savingsDB.total,
       };
 
-
       //dispatching the fetched overview value to the central state
       dispatch({
-        type : ADD_SUM_BUDGET,
-        payload : sumOfBudgets
-      })
+        type: ADD_SUM_BUDGET,
+        payload: sumOfBudgets,
+      });
 
       //This will flip the switch and this will make the useEffect from App.js to retrigger to fetch the new data
-      dispatch({
-        type: IS_UPDATED,
-        payload : !isUpdated
-      })
-
+      // dispatch({
+      //   type: IS_UPDATED,
+      //   payload : !isUpdated
+      // })
     });
   };
 
@@ -120,7 +111,6 @@ const Home = () => {
   //On change and submits
 
   const onChangeType = () => {
-
     //Three types of transaction can be done (expense, income, saving)
     //and each of them have their own respective sub transaction types.
     //As an initial step we are inserting the expense transaction and its sub transaction into the dropdown fields
@@ -151,7 +141,7 @@ const Home = () => {
       },
     ];
 
-    //filtering out the other transactions 
+    //filtering out the other transactions
     const selectedTransTypeData = transTypeData.filter(
       (TransTypeData) => TransTypeData.type === transType
     );
@@ -176,7 +166,6 @@ const Home = () => {
 
   //End submit function which submits all the writte values into the DB
   const submitValues = async () => {
-
     //addABudget is the helper function which talks with the DB and inserts the data
     addABudget(values)
       .then((data) => {
@@ -194,6 +183,12 @@ const Home = () => {
           comments: "",
           amount: "",
           status: true,
+        });
+
+        //This will flip the switch and this will make the useEffect from App.js to retrigger to fetch the new data
+        dispatch({
+          type: IS_UPDATED,
+          payload: !isUpdated,
         });
 
         //Returing Success toast
@@ -221,7 +216,6 @@ const Home = () => {
 
   //This is the about part of the home page
   const Aboutapp = () => (
-
     //Grid display has been used here
     <div className="grid-item-1">
       <h1>Personal</h1>

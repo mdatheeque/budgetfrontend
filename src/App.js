@@ -16,6 +16,7 @@ import { ADD_BUDGET } from "./Context/action.types";
 
 //helper imports
 import { getAllBudgets } from "./Dashboard/helper/apicalls";
+import Dashboard from "./Dashboard/Dashboard";
 
 //Context API - 1st step - Creating an initial state
 
@@ -32,23 +33,7 @@ const App = () => {
   //destructuring necessary values from the central state
   const { isUpdated } = state;
 
-  //Preloading data function which sets all the fetched data into the central state
-  const getallbudgets = async () => {
-    //getAllBudgets is a helper function which talks with the backend and gets us all the budget data
-    const result = await getAllBudgets();
 
-    //after receving data - setting the fetched values to the central state for other components to use
-    dispatch({
-      type: ADD_BUDGET,
-      payload: result.budgets,
-    });
-  };
-
-  // preload use effect. This effect will also be affcted whenever a new budget is updated to the DB.
-  // Inorder to set this into motion, we always have to flip the switch of isUpdated from the central State.
-  useEffect(() => {
-    getallbudgets();
-  }, [isUpdated]);
 
 
   //Core return statement where all the components goes in
@@ -59,7 +44,7 @@ const App = () => {
       <div>
         <ToastContainer />
         <Home />
-        {/* <Dashboard /> */}
+        <Dashboard />
         {/* <h1>Specialized dashboard</h1> */}
       </div>
     </BudgetContext.Provider>

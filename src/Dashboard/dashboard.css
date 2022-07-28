@@ -1,0 +1,30 @@
+.dashboard-container {
+  background: linear-gradient(
+    296.66deg,
+    #c1fffb 1.14%,
+    rgba(255, 201, 201, 0.6) 98.42%
+  );
+  height: 100vh;
+}
+
+.dashboard__grid-container {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    /* align-items: center; */
+    grid-column: 1/13;
+    margin-top: 20px;
+    /* grid-row: 1/3; */
+    padding: 20px;
+    /* height: 472px; */
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    border-radius: 15px;
+  }
+
+.dashboard__grid-items{
+    display: flex;
+    flex-direction: row;
+    justify-content:space-evenly;
+
+}
